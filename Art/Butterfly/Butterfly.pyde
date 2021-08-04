@@ -1,14 +1,26 @@
 # Butterfly
-# https://www.originlab.com/www/products/GraphGallery.aspx?GID=354
+# by NeoLight
+# Function found in: https://www.originlab.com/www/products/GraphGallery.aspx?GID=354
+
+from __future__ import division
+import math
 
 t = 0
-s = 100
-r = 7
-t_precision = 0.05
-MAX_POINTS = 125 # Maximum number of points to be drawn
-# background_color = color(0, 0, 0)
+t_precision = .05
+
+s = 100 # Scale factor
+r = 7 # Circle radius
+
+MAX_POINTS = 150 # Maximum number of points to be drawn
+
+b_start_color = color(0) # Starting color of background gradient
+b_end_color = color(74, 21, 12) # Starting color of background gradient
+G_PRECISION = 50 # Number of rectangles used to perform background gradient
+
+DECIMAL_PRECISION = 100
 
 points = []
+
 
 class Point():
     def __init__(self, coords, color_obj):
@@ -18,6 +30,7 @@ class Point():
         self.x = self.coords[0]
         self.y = self.coords[1]
 
+
 def setup():
     size(1336, 768)
     
@@ -25,8 +38,8 @@ def setup():
     stroke(0, 0, 0, 0)
     
 def draw():
-    global t
-    custom_background()
+    global t, b_start_color
+    gradient(b_start_color, b_end_color, G_PRECISION)
     
     # Get random point colors
     random_color_r = random(255)
@@ -36,8 +49,8 @@ def draw():
     random_color = color(random_color_r, random_color_g, random_color_b)
     
     # Get x and y points
-    x = butterfly_x(t)
-    y = butterfly_y(t)
+    x = butterfly_x(t, DECIMAL_PRECISION)
+    y = butterfly_y(t, DECIMAL_PRECISION)
     
     # Scale
     x = x * s
@@ -52,11 +65,11 @@ def draw():
         points.pop(0)
     
     # Add new point to array
+    print(x, y)
     new_point = Point([x, y], random_color)
     points.append(new_point)
     
     # Draw
-    print(x, y)
     
     for point_obj in points:        
         fill(point_obj.color_obj)
@@ -78,16 +91,26 @@ def draw():
     
     # Increase t
     t = t + t_precision
+    b_start_color = lerpColor(b_start_color, color(255), 0.005)
     
-def custom_background():
-    for x in range(width):
-        # stroke(12, 156, 200)
-        stroke(0)
-        line(x, 0, x, height)
+def gradient(start_color, end_color, g_precision):
+    width_fraction = width / g_precision
+    lerp_fraction = 1 / (g_precision - 1) # -1 allows the last rectangle to be the same as the end color
     
-def butterfly_x(t):
-    return sin(t) * (exp(cos(t)) - 2 * cos(4*t)-(sin(t/12))**5)
+    for i in range(g_precision):
+        current_x = width_fraction * i
+        current_lerp = lerp_fraction * i
+        current_color = lerpColor(start_color, end_color, current_lerp)
+        
+        noStroke()
+        fill(current_color)
+        rect(current_x, 0, width_fraction, height)
+    
+def butterfly_x(t, dec_precision=3):
+    x = sin(t) * (exp(cos(t)) - 2 * cos(4*t)-(sin(t/12))**5)
+    return round(x, dec_precision)
 
-def butterfly_y(t):
+def butterfly_y(t, dec_precision=3):
     # y axis is inverted to fix different coordinate systems
-    return -(cos(t) * (exp(cos(t)) - 2 * cos(4*t)-(sin(t/12))**5))
+    y = -(cos(t) * (exp(cos(t)) - 2 * cos(4*t)-(sin(t/12))**5))
+    return round(y, dec_precision)
